@@ -1,6 +1,8 @@
 /**
  * Created by nick on 16/5/14.
  */
+
+/// <reference path="./typings/mongoose/mongoose.d.ts" />
 import mongoose = require('mongoose');
 
 mongoose.connect('mongodb://localhost:57017/user_koala');
@@ -31,11 +33,10 @@ kittySchema.methods.speak = function () {
   console.log(greeting);
 }
 
-var Kitten = mongoose.model('Kitten', kittySchema);
 var Kitten = mongoose.model < IKitten >('Kitten', kittySchema);
 
 
-function main() {
+async function main() {
   var silence = new Kitten({name: 'Silence'});
   console.log(silence.name); // 'Silence'
 
@@ -50,13 +51,13 @@ function main() {
   //    fluffy.speak();
   //});
 
-  Kitten.find({name: /^fluff/}, function (err, kittens) {
-    if (err) return console.error(err);
-    console.log(kittens);
-  })
+  //Kitten.find({name: /^fluff/}, function (err, kittens) {
+  //  if (err) return console.error(err);
+  //  console.log(kittens);
+  //})
 
-  //let kittens = await Kitten.find({name: /^fluff/}).exec()
-  //console.log(kittens);
+  let kittens = await Kitten.find({name: /^fluff/}).exec()
+  console.log(kittens);
 }
 
 main()
