@@ -1,5 +1,4 @@
 import express = require('express');
-import {resolve} from "url";
 let router = express.Router();
 
 const timeOut = function (time){
