@@ -1,10 +1,14 @@
 "use strict";
-var express = require('express');
-var path = require('path');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var app = express();
+const fs = require('fs');
+const path = require('path');
+const join = require('path').join;
+const logger = require('morgan');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const express = require('express');
+const port = process.env.PORT || 3000;
+const app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -17,5 +21,24 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 const routes_1 = require('./config/routes');
 routes_1.default(app);
+// Bootstrap models
+const models = join(__dirname, 'app/models');
+fs.readdirSync(models)
+    .filter(file => ~file.search(/^[^\.].*\.js$/))
+    .forEach(file => require(join(models, file)));
+connect()
+    .on('error', console.log)
+    .on('disconnected', connect)
+    .once('open', listen);
+function listen() {
+    if (app.get('env') === 'test')
+        return;
+    app.listen(port);
+    console.log('Express app started on port ' + port);
+}
+function connect() {
+    const options = { server: { socketOptions: { keepAlive: 1 } } };
+    return mongoose.connect('mongodb://localhost:57017/new_koala', options).connection;
+}
 module.exports = app;
 //# sourceMappingURL=app.js.map
