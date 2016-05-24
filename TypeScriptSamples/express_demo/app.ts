@@ -1,3 +1,4 @@
+import {User} from "./app/models/User";
 const fs = require('fs');
 const path = require('path');
 const join = require('path').join;
@@ -22,7 +23,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
+import {instance as user} from './app/models/User'
 
 import routes from './config/routes'
 
@@ -60,6 +61,13 @@ function listen() {
   //
   //main()
   //main2()
+
+  //async function main() {
+  //  console.log('hehe', user.findOne({}).exec);
+  //  let kittens = await user.findOne({}).exec()
+  //  console.log('kittens', kittens);
+  //}
+  //main()
   console.log('Express app started on port ' + port);
 }
 
