@@ -3,6 +3,7 @@
  */
 import e = require('express');
 import mongoose = require('mongoose');
+import Order from '../models/Order'
 
 
 const timeOut = function (time) {
@@ -25,6 +26,18 @@ class OrderController {
     const Order = mongoose.model('Order')
     let result = await Order.find({}).limit(5).exec()
     console.log('aaaaa', result.length);
+    res.status(200).json(result);
+  }
+
+  async findOneWithClass(req:e.Request, res:e.Response) {
+    let result = await Order.findById2('54ce6d7779337f164b36504a')
+    res.status(200).json(result);
+    res.status(200).json(result);
+  }
+
+  async findOne(req:e.Request, res:e.Response) {
+    const Order = mongoose.model('Order')
+    let result = await Order.findOne({}).exec()
     res.status(200).json(result);
   }
 }

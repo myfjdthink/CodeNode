@@ -34,11 +34,28 @@ function listen() {
     if (app.get('env') === 'test')
         return;
     app.listen(port);
+    //import Order from './app/models/Order'
+    //async function main() {
+    //  let kittens = await Order.findById2('54ce6d7779337f164b36504a')
+    //  console.log('kittens', kittens);
+    //}
+    //
+    //function main2() {
+    //  Order.findById2('54ce6d7779337f164b36504a').then(function (order) {
+    //    console.log('aaaa', order.amount);
+    //    console.log('aaaa', order);
+    //  }).catch(function (err) {
+    //    console.log('aaaa err', err);
+    //  })
+    //}
+    //
+    //main()
+    //main2()
     console.log('Express app started on port ' + port);
 }
 function connect() {
     const options = { server: { socketOptions: { keepAlive: 1 } } };
-    return mongoose.connect('mongodb://localhost:57017/new_koala', options).connection;
+    return mongoose.connect('mongodb://localhost:57017/user_koala', options).connection;
 }
 module.exports = app;
 //# sourceMappingURL=app.js.map

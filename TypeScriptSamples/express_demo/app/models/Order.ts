@@ -10,11 +10,19 @@ import mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 
+interface IOrder extends mongoose.Document {
+  amount: string;
+  oType: string;
+  pType: string;
+  status: string;
+  createdAt: Date;
+}
+
 /**
  * Order Schema
  */
 
-const OrderSchema = new Schema({
+const _schema = new Schema({
 
   amount: {type: Number},
   oType: {type: Number},
@@ -31,14 +39,14 @@ const OrderSchema = new Schema({
  * Validations
  */
 
-OrderSchema.path('amount').required(true, 'Order amount cannot be blank');
-OrderSchema.path('status').required(true, 'Order status cannot be blank');
+_schema.path('amount').required(true, 'Order amount cannot be blank');
+_schema.path('status').required(true, 'Order status cannot be blank');
 
 /**
  * Pre-remove hook
  */
 
-OrderSchema.pre('remove', function (next) {
+_schema.pre('remove', function (next) {
   // const imager = new Imager(imagerConfig, 'S3');
   // const files = this.image.files;
 
@@ -50,69 +58,144 @@ OrderSchema.pre('remove', function (next) {
   next();
 });
 
-/**
- * Methods
- */
+///**
+// * Methods
+// */
+//
+//_schema.methods = {
+//
+//  /**
+//   * Save Order and upload image
+//   *
+//   * @param {Object} images
+//   * @api private
+//   */
+//
+//  uploadAndSave: function (image) {
+//    const err = this.validateSync();
+//    if (err && err.toString()) throw new Error(err.toString());
+//    return this.save();
+//
+//    /*
+//     if (images && !images.length) return this.save();
+//     const imager = new Imager(imagerConfig, 'S3');
+//
+//     imager.upload(images, function (err, cdnUri, files) {
+//     if (err) return cb(err);
+//     if (files.length) {
+//     self.image = { cdnUri : cdnUri, files : files };
+//     }
+//     self.save(cb);
+//     }, 'Order');
+//     */
+//  }
+//};
+//
+///**
+// * Statics
+// */
+//
+//_schema.statics = {
+//  /**
+//   * List Orders
+//   *
+//   * @param {Object} options
+//   * @api private
+//   */
+//
+//  list: async function (options) {
+//    const criteria = options.criteria || {};
+//    const page = options.page || 0;
+//    const limit = options.limit || 30;
+//    await this.find(criteria)
+//      .populate('user', 'name username')
+//      .sort({createdAt: -1})
+//      .limit(limit)
+//      .skip(limit * page)
+//      .exec();
+//  }
+//};
 
-OrderSchema.methods = {
+//interface IUserModel extends IOrder, mongoose.Document { }
+const _model = mongoose.model < IOrder >('Order', _schema);
+
+class Order {
+
+  ///**
+  // *
+  // * @returns {Promise<IOrder[]>}
+  // */
+  //static async list():Order[] {
+  //  let orders:Order[] = []
+  //  let err = null
+  //  try {
+  //    orders = await _model.find({}).exec()
+  //  } catch (innerErr) {
+  //    err = innerErr
+  //  }
+  //  orders = orders.map(order => {
+  //    return new Order(order)
+  //  })
+  //  return new Promise < IOrder[] >((resolve, reject) => {
+  //    err ? reject(err) : resolve(orders);
+  //  })
+  //}
+
 
   /**
-   * Save Order and upload image
-   *
-   * @param {Object} images
-   * @api private
+   * static
+   * @param id
+   * @returns {Promise<Order>}
    */
-
-  uploadAndSave: function (image) {
-    const err = this.validateSync();
-    if (err && err.toString()) throw new Error(err.toString());
-    return this.save();
-
-    /*
-     if (images && !images.length) return this.save();
-     const imager = new Imager(imagerConfig, 'S3');
-
-     imager.upload(images, function (err, cdnUri, files) {
-     if (err) return cb(err);
-     if (files.length) {
-     self.image = { cdnUri : cdnUri, files : files };
-     }
-     self.save(cb);
-     }, 'Order');
-     */
+  static findById(id:string):Promise < Order > {
+    console.log('findById2', ' 执行 ');
+    return new Promise<Order>((resolve, reject) => {
+      _model.findById(id, (err, order) => {
+        err ? reject(err) : resolve(new Order(order))
+      })
+    });
   }
-};
 
-/**
- * Statics
- */
-
-OrderSchema.statics = {
   /**
-   * List Orders
-   *
-   * @param {Object} options
-   * @api private
+   * static
+   * @param id
+   * @returns {Promise<Order>}
    */
-
-  list: async function (options) {
-    const criteria = options.criteria || {};
-    const page = options.page || 0;
-    const limit = options.limit || 30;
-    await this.find(criteria)
-      .populate('user', 'name username')
-      .sort({createdAt: -1})
-      .limit(limit)
-      .skip(limit * page)
-      .exec();
+  static findById2(id:string):Promise < Order > {
+    return new Promise<Order>((resolve, reject) => {
+      _model.findById(id)
+        .exec()
+        .onResolve((err, order) => {
+          err ? reject(err) : resolve(new Order(order))
+        });
+    });
   }
-};
 
-var Order = mongoose.model('Order', OrderSchema);
+  /**
+   *
+   */
+  private _document:IOrder;
 
+  /**
+   * 构造器
+   * @param document
+   */
+  constructor(document:IOrder) {
+    this._document = document;
+  }
+
+  get amount():string {
+    return this._document.amount;
+  }
+}
+
+export default Order
+
+////console.log(' 见鬼了');
 //async function main() {
-//  let kittens = await Order.find({}).limit(5).exec()
-//  console.log(kittens);
+//  console.log('findById', Order.findById);
+//  let kittens = await Order.findById('')
+//  console.log('kittens', kittens);
 //}
 //
 //main()
