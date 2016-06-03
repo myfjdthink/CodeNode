@@ -1,3 +1,5 @@
+import UserController from "../app/controllers/UserController";
+import OrderController from '../app/controllers/OrderController'
 'use strict';
 
 /*
@@ -7,15 +9,13 @@
 // Note: We can require users, articles and other cotrollers because we have
 // set the NODE_PATH to be ./app/controllers (package.json # scripts # start)
 
-
-import OrderController from '../app/controllers/OrderController'
-
+const user = new UserController()
 const order = new OrderController()
-console.log('order list', order.list);
+//console.log('order list', order.list);
 
 
 /**
- * Route middlewares
+ * Route middlewaresß
  */
 
 // TODO middlewares
@@ -25,8 +25,11 @@ console.log('order list', order.list);
  */
 export default function (app) {
   // user routes
-  app.get('/orders', order.list);
 
+  user.register(app)
+  app.get('/user/aotoRoute', user.aotoRoute);
+  app.get('/orders', order.list);
+  //user.register
   /**
    * Error handling
    */

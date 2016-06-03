@@ -10,9 +10,8 @@ import mongoose = require('mongoose');
 
 
 
-const Schema = mongoose.Schema;
 
-class BaseModel implements Document {
+class BaseModel {
   id:string;
   _id:any;
 

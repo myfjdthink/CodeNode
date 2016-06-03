@@ -23,7 +23,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-import {instance as user} from './app/models/User'
 
 import routes from './config/routes'
 

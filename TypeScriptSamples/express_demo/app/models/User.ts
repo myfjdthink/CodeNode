@@ -28,9 +28,9 @@ const _schema = new Schema({
   phone: {type: String}
 }, {collection: 'user', id: true});
 
-const model = mongoose.model < User >('User', _schema);
-const instance = new User(model)
+// const model = mongoose.model < User >('User', _schema);
+// const instance = new User(model)
 //User.findOne = _model.findOne
 
 export {User}
-export {instance}
+// export {instance}
