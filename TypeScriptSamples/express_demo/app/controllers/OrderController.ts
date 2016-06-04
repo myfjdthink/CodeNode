@@ -17,7 +17,7 @@ const timeOut = function (time) {
 class OrderController {
   @router({
     method: 'get',
-    path: 'order/awaitTest'
+    path: '/order/awaitTest'
   })
   async awaitTest(req:e.Request, res) {
     console.log('OrderController', 'awaitTest');
@@ -27,7 +27,7 @@ class OrderController {
 
   @router({
     method: 'get',
-    path: 'order/findOneWithClass'
+    path: '/order/findOneWithClass'
   })
   async findOneWithClass(req:e.Request, res:e.Response) {
     let result = await Order.findById2('54ce6d7779337f164b36504a')

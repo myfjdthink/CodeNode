@@ -11,11 +11,11 @@ const Schema = mongoose.Schema;
 
 
 interface IOrder extends mongoose.Document {
-  amount:string;
-  oType:string;
-  pType:string;
-  status:string;
-  createdAt:Date;
+  amount: string;
+  oType: string;
+  pType: string;
+  status: string;
+  createdAt: Date;
 }
 
 /**
@@ -47,16 +47,100 @@ _schema.path('status').required(true, 'Order status cannot be blank');
  */
 
 _schema.pre('remove', function (next) {
+  // const imager = new Imager(imagerConfig, 'S3');
+  // const files = this.image.files;
+
+  // if there are files associated with the item, remove from the cloud too
+  // imager.remove(files, function (err) {
+  //   if (err) return next(err);
+  // }, 'Order');
+
   next();
 });
 
+///**
+// * Methods
+// */
+//
+//_schema.methods = {
+//
+//  /**
+//   * Save Order and upload image
+//   *
+//   * @param {Object} images
+//   * @api private
+//   */
+//
+//  uploadAndSave: function (image) {
+//    const err = this.validateSync();
+//    if (err && err.toString()) throw new Error(err.toString());
+//    return this.save();
+//
+//    /*
+//     if (images && !images.length) return this.save();
+//     const imager = new Imager(imagerConfig, 'S3');
+//
+//     imager.upload(images, function (err, cdnUri, files) {
+//     if (err) return cb(err);
+//     if (files.length) {
+//     self.image = { cdnUri : cdnUri, files : files };
+//     }
+//     self.save(cb);
+//     }, 'Order');
+//     */
+//  }
+//};
+//
+///**
+// * Statics
+// */
+//
+//_schema.statics = {
+//  /**
+//   * List Orders
+//   *
+//   * @param {Object} options
+//   * @api private
+//   */
+//
+//  list: async function (options) {
+//    const criteria = options.criteria || {};
+//    const page = options.page || 0;
+//    const limit = options.limit || 30;
+//    await this.find(criteria)
+//      .populate('user', 'name username')
+//      .sort({createdAt: -1})
+//      .limit(limit)
+//      .skip(limit * page)
+//      .exec();
+//  }
+//};
+
+//interface IUserModel extends IOrder, mongoose.Document { }
+const _model = mongoose.model < IOrder >('Order', _schema);
 
 class Order {
-  static _model:any
 
-  static init() {
-    Order._model = mongoose.model < IOrder >('Order', _schema);
-  }
+  ///**
+  // *
+  // * @returns {Promise<IOrder[]>}
+  // */
+  //static async list():Order[] {
+  //  let orders:Order[] = []
+  //  let err = null
+  //  try {
+  //    orders = await _model.find({}).exec()
+  //  } catch (innerErr) {
+  //    err = innerErr
+  //  }
+  //  orders = orders.map(order => {
+  //    return new Order(order)
+  //  })
+  //  return new Promise < IOrder[] >((resolve, reject) => {
+  //    err ? reject(err) : resolve(orders);
+  //  })
+  //}
+
 
   /**
    * static
@@ -66,7 +150,7 @@ class Order {
   static findById(id:string):Promise < Order > {
     console.log('findById2', ' 执行 ');
     return new Promise<Order>((resolve, reject) => {
-      Order._model.findById(id, (err, order) => {
+      _model.findById(id, (err, order) => {
         err ? reject(err) : resolve(new Order(order))
       })
     });
@@ -79,7 +163,7 @@ class Order {
    */
   static findById2(id:string):Promise < Order > {
     return new Promise<Order>((resolve, reject) => {
-      Order._model.findById(id)
+      _model.findById(id)
         .exec()
         .onResolve((err, order) => {
           err ? reject(err) : resolve(new Order(order))
@@ -107,11 +191,11 @@ class Order {
 
 export default Order
 
-// //console.log(' 见鬼了');
-// async function main() {
-//   console.log('Order findById', Order.findById);
-//   let kittens = await Order.findById('')
-//   console.log('kittens', kittens);
-// }
+////console.log(' 见鬼了');
+//async function main() {
+//  console.log('findById', Order.findById);
+//  let kittens = await Order.findById('')
+//  console.log('kittens', kittens);
+//}
 //
-// main()
+//main()
