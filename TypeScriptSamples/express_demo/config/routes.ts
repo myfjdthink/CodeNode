@@ -10,8 +10,6 @@ import OrderController from '../app/controllers/OrderController'
 // set the NODE_PATH to be ./app/controllers (package.json # scripts # start)
 
 const user = new UserController()
-const order = new OrderController()
-//console.log('order list', order.list);
 
 
 /**
@@ -27,7 +25,6 @@ export default function (app) {
   // user routes
 
   app.get('/user/aotoRoute', user.aotoRoute);
-  app.get('/orders', order.list);
   //user.register
   /**
    * Error handling
