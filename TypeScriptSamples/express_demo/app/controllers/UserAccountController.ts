@@ -4,6 +4,7 @@
 import e = require('express');
 import BaseController from "./common/BaseController";
 import {router} from "../decorators/Web";
+import Order from '../models/Order'
 
 const timeOut = function (time) {
   return new Promise(function (resolve) {
@@ -12,13 +13,6 @@ const timeOut = function (time) {
     }, time)
   });
 };
-
-function f() {
-  console.log("f(): evaluated");
-  return function (target, propertyKey:string, descriptor:PropertyDescriptor) {
-    console.log("f(): called");
-  }
-}
 
 class UserController extends BaseController {
   @router({
@@ -30,6 +24,18 @@ class UserController extends BaseController {
     var abc = req.param('abc');
     console.log('UserController', 'aotoRoute', id, abc);
     let result = await timeOut(10);
+    res.send(result);
+  }
+
+  @router({
+    method: 'get',
+    path: '/user/findOne'
+  })
+  async findOne(req:e.Request, res) {
+    console.log('UserController', 'findOne');
+    let result = await Order.findById('54ce6d7779337f164b36504a');
+    const amount = result.amount
+    console.log('amount', amount);
     res.send(result);
   }
 }

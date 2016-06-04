@@ -1,6 +1,5 @@
 "use strict";
-const RouteDecoratorAble_1 = require("./RouteDecoratorAble");
-class BaseController extends RouteDecoratorAble_1.default {
+class BaseController {
     aotoRoute(req, res) {
     }
 }

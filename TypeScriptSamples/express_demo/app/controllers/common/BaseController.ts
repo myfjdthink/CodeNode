@@ -2,9 +2,8 @@
  * Created by nick on 16/5/20.
  */
 import e = require('express');
-import RouteDecoratorAble from "./RouteDecoratorAble";
 
-class BaseController extends RouteDecoratorAble{
+class BaseController {
 
   aotoRoute(req:e.Request, res) {
 
