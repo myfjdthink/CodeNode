@@ -1,7 +1,7 @@
 import Mongoose = require('mongoose');
 import * as express from "express";
 import * as Logger from "log-debug";
-import UserController from "./app/controllers/UserAccountController";
+// import UserController from "./app/controllers/UserAccountController";
 // let a = express.Router()
 
 const port = process.env.PORT || 3000;
@@ -16,11 +16,20 @@ class ServerLoader {
   }
 
   registerRouters() {
-    // ...
+    Logger.info('registerRouters...');
+    for (let [config, controller] of ServerLoader.__DecoratedRouters) {
+      let controllers = Array.isArray(controller) ? controller : [controller]
+      // controllers.forEach((controller) => this.router[config.method](config.path, controller))
+      controllers.forEach((controller) => {
+        console.log('find router', config.method, config.path, controller.name);
+        this.app[config.method](config.path, controller);
+      })
+    }
   }
 
   start() {
     this.config()
+    this.registerRouters()
     this.listen(port)
   }
 
@@ -29,7 +38,8 @@ class ServerLoader {
   }
 
   config() {
-    this.app.get('/user/aotoRoute', new UserController().aotoRoute);
+    Logger.info('config server...');
+    // this.app.get('/user/aotoRoute', new UserController().aotoRoute);
   }
 
   listen(port:number) {

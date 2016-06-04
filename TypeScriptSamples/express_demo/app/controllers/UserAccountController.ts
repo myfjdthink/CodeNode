@@ -3,6 +3,7 @@
  */
 import e = require('express');
 import BaseController from "./common/BaseController";
+import {router} from "../decorators/Web";
 
 const timeOut = function (time) {
   return new Promise(function (resolve) {
@@ -20,7 +21,10 @@ function f() {
 }
 
 class UserController extends BaseController {
-
+  @router({
+    method: 'get',
+    path: '/user/login'
+  })
   async aotoRoute(req:e.Request, res) {
     var id = req.query.id;
     var abc = req.param('abc');
