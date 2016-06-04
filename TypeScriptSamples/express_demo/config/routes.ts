@@ -26,7 +26,6 @@ const order = new OrderController()
 export default function (app) {
   // user routes
 
-  user.register(app)
   app.get('/user/aotoRoute', user.aotoRoute);
   app.get('/orders', order.list);
   //user.register

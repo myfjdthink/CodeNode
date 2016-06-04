@@ -1,4 +1,3 @@
-import {User} from "./app/models/User";
 const fs = require('fs');
 const path = require('path');
 const join = require('path').join;

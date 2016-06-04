@@ -19,12 +19,12 @@ function f() {
   }
 }
 
-class UserController extends BaseController{
+class UserController extends BaseController {
 
-  @f()
   async aotoRoute(req:e.Request, res) {
-    var id = req.param('id');
-    console.log('UserController', 'aotoRoute', id);
+    var id = req.query.id;
+    var abc = req.param('abc');
+    console.log('UserController', 'aotoRoute', id, abc);
     let result = await timeOut(10);
     res.send(result);
   }

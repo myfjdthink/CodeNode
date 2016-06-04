@@ -1,7 +1,10 @@
 node_modules
 typings
+typings_back
 npm-debug.log
 *.map
+*.js
 app/*/*.js
+app/*/*/*.js
 config/*/*.js
 config/*.js
