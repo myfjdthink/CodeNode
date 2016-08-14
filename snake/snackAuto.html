@@ -6,7 +6,7 @@
     <script type="text/javascript" src="AStar.js"></script>
 </head>
 <body>
-<canvas id="myCanvas" width="480 " height="480" style="border:1px solid #d3d3d3;">
+<canvas id="myCanvas" width="360 " height="360" style="border:1px solid #d3d3d3;">
     Your browser does not support the HTML5 canvas tag.
 </canvas>
 <div>
@@ -25,7 +25,7 @@
 <script>
     var ctx = document.getElementById("myCanvas").getContext("2d");
     var pointSize = 20;
-    var length = 24
+    var length = 15
     //方向
     var up = 38, down = 40, left = 37, right = 39;
     //蛇
@@ -35,6 +35,15 @@
     }, {
         x: 10,
         y: 8
+    }, {
+        x: 10,
+        y: 7
+    }, {
+        x: 10,
+        y: 6
+    }, {
+        x: 10,
+        y: 5
     }];
     //co表示蛇前进的方向，默认向下
     var direct = down;
@@ -42,6 +51,8 @@
     var auto = true;
     //flood食物
     var flood = null;
+    var grid = null;
+    var drop = null
     var score = document.getElementById("score");
     var dead = document.getElementById("dead");
     //给蛇加上阴影效果
@@ -66,7 +77,6 @@
 //            return;
         //循环，间隔为30毫秒
         init();
-        auto = true;
         setInterval(moveSnake, 30);
     }
 
@@ -87,18 +97,44 @@
         return false
     }
 
-    var id = setInterval(moveSnake, 1000);
+    var id = setInterval(moveSnake, 30);
 
     var drawSnake = function () {
         //清空屏幕
         ctx.clearRect(0, 0, pointSize * length, pointSize * length);
         //如果有食物，则绘制食物
-        if (flood)
+        if (flood){
+            ctx.fillStyle="#ff00ff";
             ctx.fillRect(flood.x * pointSize, flood.y * pointSize, pointSize, pointSize);
+            ctx.fillStyle="#000000";
+        }
 
         for (var i = 0; i < snake.length; i++)
             ctx.fillRect(snake[i].x * pointSize, snake[i].y * pointSize, pointSize, pointSize);
+
+        //drawPaths()
+
     };
+    
+    function drawPaths() {
+        console.log('drawPaths', paths.length);
+        ctx.fillStyle="#0000ff";
+        for (var i = 0; i < paths.length - 1; i++)
+            ctx.fillRect(paths[i][0] * pointSize, paths[i][1] * pointSize, pointSize, pointSize);
+        ctx.fillStyle="#000000";
+    }
+
+    function drawGrid() {
+        console.log('drawPaths', paths.length);
+        ctx.fillStyle="#00ffff";
+        for (var i = 0; i < length - 1; i++)
+            for (var j = 0; j < length; j++) {
+                if(grid[i][j])
+                    ctx.fillRect(i * pointSize, j * pointSize, pointSize, pointSize);
+            }
+        ctx.fillStyle="#000000";
+    }
+
     function nodeEqual(nodeA, nodeB) {
         return nodeA.x === nodeB.x && nodeA.y === nodeB.y
     }
@@ -120,10 +156,15 @@
         }
         genFood()
         var next = getNext(direct)
-        nodeEqual(next, flood || {})//吃了食物
-                ? (snake.unshift(flood), flood = null)
-                //只是移动
-                : (snake.unshift(next) && snake.pop());
+        if(nodeEqual(next, flood || {})){
+            //吃了食物
+            snake.unshift(flood)
+            flood = null
+         }else{
+            //只是移动
+            snake.unshift(next)
+            drop = snake.pop();
+         }
 
         //绘制蛇
         drawSnake();
@@ -157,55 +198,144 @@
     function getNext(d) {
         if (paths.length === 0) {
             paths = genPaths()
-            drawPaths()
+            paths.shift()
         }
-        var next = paths.pop()
-        return {x: next[0], y: next[1]};
+        var n = paths.shift()
+        if(!n){
+            window.clearInterval(id);
+            dead.innerHTML = '无路可走';
+            return;
+        }
+        return {x: n[0], y: n[1]};
+    }
+
+    function genPaths0() {
+        return scanModel()
     }
 
     function genPaths() {
-        var find = AStar(initGrid(), [snake[0].x, snake[0].y], [flood.x, flood.y], "Manhattan")
-        console.log('find', find);
+        var find =  getAstarPath(snake[0], flood)
+        var find2 = genNextPaths(find)
+        // 走了下一步会被困住
+        if(!find2 || find2.length === 0){
+            var find3 = getAstarPath(snake[0], drop)
+
+            console.log('find3 good')
+            return find3
+        } else {
+            return find 
+        }
+    }
+
+    function scanModel() {
+        var temp_grid = initGrid(snake)
+        var s0 = snake[0]
+        var s1 = snake[1]
+        var dir = 'up'
+        var next = []
+        if(s0.x === s1.x && s0.y > s1.y){
+            dir = 'down'
+            next = [s0.x, s0.y + 1]
+        }
+        if(s0.x === s1.x && s0.y < s1.y){
+            dir = 'up'
+            next = [s0.x, s0.y + 1]
+        }
+        if(s0.y === s1.y && s0.x > s1.x){
+            dir = 'right'
+            next = [s0.x + 1, s0.y]
+        }
+        if(s0.y === s1.y && s0.x < s1.x){
+            dir = 'left'
+            next = [s0.x - 1, s0.y]
+        }
+        console.log('need dir')
+       return [[], next]
+
+    }
+
+     function genPaths4() {
+        var find = getAstarPath(snake[0], flood)
+        if(find.length === 0){
+            return getAstarPath(snake[0], drop)
+        }
+        var next =  {x: find[0][0], y: find[0][1]};
+        if(!drop){
+            return find
+        }
+        var nextPaths = getAstarPath(next, drop)
+        // 走了下一步会被困住
+        if(!nextPaths){
+            return getAstarPath(snake[0], drop)
+        }
         return find
     }
 
-    function drawPaths() {
-        console.log('drawPaths', paths.length);
-        ctx.fillStyle="#0000ff";
-        for (var i = 0; i < paths.length; i++)
-            ctx.fillRect(paths[i].x * pointSize, paths[i].y * pointSize, pointSize, pointSize);
-        ctx.fillStyle="black";
+    function genPaths3() {
+        if(drop && snake.length === 15){
+            return  roundPath()
+        }else{
+            return AStar(initGrid(snake), [snake[0].x, snake[0].y], [flood.x, flood.y], "Manhattan")
+        }
     }
 
-    var grid = null
-    function initGrid() {
-        if (!grid) {
-            var grid = []
-            for (var i = 0; i < length; i++) {
-                grid[i] = new Array(length);
-                for (var j = 0; j < length; j++) {
-                    grid[i][j] = 0
-                }
+    function getAstarPath(start, end) {
+        return AStar(initGrid(snake), [start.x, start.y], [end.x, end.y], "Manhattan")
+    }
+
+    function roundPath() {
+        var temp_grid = initGrid(snake)
+        var corner = null
+        for (var i = 0; i < snake.length - 2 ; i++) {
+            var s1 = snake[i]
+            var s2 = snake[i+1]
+            var s3 = snake[i+2]
+            var result = null
+            if(s1.y === s2.y && s2.x === s3.x){
+                result = {x : s1.x, y : s3.y}
+            }
+            if(s1.x === s2.x && s2.y === s3.y){
+                result = {x : s3.x, y : s1.y}
+            }
+            if(temp_grid[s1.y][s1.x]){
+                console.log('should be', s1)
+            }
+            if(result && temp_grid[result.y][result.x] === 0 && !nodeEqual(result, snake[0])){
+                corner = result
+                break
+            }
+
+        }
+        //console.log('find corner', corner, temp_grid[corner.x][corner.y])
+        //console.log('find snake', snake[0])
+        corner = corner || flood ||  drop
+        return  AStar(temp_grid, [snake[0].x, snake[0].y], [corner.x, corner.y], "Manhattan")
+    }
+
+    function genNextPaths(temp_paths) {
+        var fakeSnake = snake.concat([])
+        for (var i = 0; i < temp_paths.length; i++) {
+            fakeSnake.unshift({x : temp_paths[i][0], y : temp_paths[i][1]})
+        }
+        fakeSnake = fakeSnake.slice(0, snake.length)
+        var find = AStar(initGrid(fakeSnake), [fakeSnake[0].x, fakeSnake[0].y], [flood.x, flood.y], "Manhattan")
+        return find 
+    }
+
+    function initGrid(tempSnake) {
+        var grid = []
+        for (var i = 0; i < length; i++) {
+            grid[i] = new Array(length);
+            for (var j = 0; j < length; j++) {
+                grid[i][j] = 0
+                //grid[i][j] = (j * i) % 7 ? Math.floor(Math.random() * 200) % 2 : 0;
             }
         }
-        for (var i = 0; i < snake.length; i++) {
-            grid[snake[i].x][snake[i].y] = 1
+        for (var i = 1; i < tempSnake.length; i++) {
+            // 这个算法好坑爹啊  x 和 y 反过来的
+            grid[tempSnake[i].y][tempSnake[i].x] = 1
         }
         return grid
-    }
-
-    function isDeadEnd(next, d) {
-        var i = getIndex(next);
-        var node = snake[i - 1];
-        if (d == up && node.y + 1 == next.y)
-            return true;
-        if (d == down && node.y - 1 == next.y)
-            return true;
-        if (d == left && node.x + 1 == next.x)
-            return true;
-        if (d == right && node.x - 1 == next.x)
-            return true;
-        return false;
     }
 
 </script>
