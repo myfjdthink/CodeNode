@@ -6,7 +6,7 @@
     <script type="text/javascript" src="AStar.js"></script>
 </head>
 <body>
-<canvas id="myCanvas" width="360 " height="360" style="border:1px solid #d3d3d3;">
+<canvas id="myCanvas" width="480 " height="480" style="border:1px solid #d3d3d3;">
     Your browser does not support the HTML5 canvas tag.
 </canvas>
 <div>
@@ -25,25 +25,29 @@
 <script>
     var ctx = document.getElementById("myCanvas").getContext("2d");
     var pointSize = 20;
-    var length = 15
+    var length = 24
     //方向
     var up = 38, down = 40, left = 37, right = 39;
     //蛇
+    //    var snake = [{
+    //        x: 10,
+    //        y: 9
+    //    }, {
+    //        x: 10,
+    //        y: 8
+    //    }, {
+    //        x: 10,
+    //        y: 7
+    //    }, {
+    //        x: 10,
+    //        y: 6
+    //    }, {
+    //        x: 10,
+    //        y: 5
+    //    }];
     var snake = [{
-        x: 10,
-        y: 9
-    }, {
-        x: 10,
-        y: 8
-    }, {
-        x: 10,
-        y: 7
-    }, {
-        x: 10,
-        y: 6
-    }, {
-        x: 10,
-        y: 5
+        x: 3,
+        y: 3
     }];
     //co表示蛇前进的方向，默认向下
     var direct = down;
@@ -56,7 +60,8 @@
     var score = document.getElementById("score");
     var dead = document.getElementById("dead");
     //给蛇加上阴影效果
-    ctx.shadowBlur = 20, ctx.shadowColor = "blue";
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "blue";
     var id = null
     main()
     function init() {
@@ -69,7 +74,6 @@
             x: 10,
             y: 8
         }];
-        direct = down;
         flood = null;
         dead.innerHTML = '';
     }
@@ -79,7 +83,7 @@
 //            return;
         //循环，间隔为30毫秒
         init();
-        setInterval(moveSnake, 30);
+        main()
     }
 
     function main() {
@@ -119,10 +123,17 @@
             ctx.fillRect(flood.x * pointSize, flood.y * pointSize, pointSize, pointSize);
             ctx.fillStyle = "#000000";
         }
-
-        for (var i = 0; i < snake.length; i++)
+        // 蛇头
+        ctx.fillStyle = "#d45611";
+        ctx.fillRect(snake[0].x * pointSize, snake[0].y * pointSize, pointSize, pointSize);
+        ctx.fillStyle = "#000000";
+        for (var i = 1; i < snake.length - 1; i++) {
             ctx.fillRect(snake[i].x * pointSize, snake[i].y * pointSize, pointSize, pointSize);
-
+        }
+        //蛇尾
+        ctx.fillStyle = "#389334";
+        ctx.fillRect(snake[snake.length - 1].x * pointSize, snake[snake.length - 1].y * pointSize, pointSize, pointSize);
+        ctx.fillStyle = "#000000";
         //drawPaths()
 
     };
@@ -147,7 +158,8 @@
     //    }
 
     function nodeEqual(nodeA, nodeB) {
-        return nodeA.x === nodeB.x && nodeA.y === nodeB.y
+        return nodeA.x === nodeB.x
+                && nodeA.y === nodeB.y
     }
 
     //如果没有食物，则在随机位置上加入一粒食物
@@ -161,6 +173,7 @@
     function moveSnake() {
         try {
             var next = getNext()
+            if (!next) return
             if (nodeEqual(next, flood || {})) {
                 //吃了食物
                 snake.unshift(flood)
@@ -197,9 +210,20 @@
     }
 
     var paths = []
-    //根据给定的方向取下一步的位置
-    function getNext(d) {
+    /**
+     * 找到下一步单元格
+     * @returns {{x: *, y: *}}
+     */
+    function getNext() {
         if (paths.length === 0) {
+            paths = genPaths()
+            paths.shift()
+        }
+        /**
+         * 在 flow_tail 状态下, 每一步都要尝试去找食物。
+         */
+        if (flow_tail) {
+//            console.log('scan ing');
             paths = genPaths()
             paths.shift()
         }
@@ -207,29 +231,45 @@
         if (!n) {
             window.clearInterval(id);
             dead.innerHTML = '无路可走';
-            return;
+            return null;
         }
         return {x: n[0], y: n[1]};
     }
 
+    /**
+     * 路线选取
+     * @type {boolean}
+     */
+    var flow_tail = false
     function genPaths() {
         var find = getAstarPath(snake[0], flood)
         // 去不到食物那边 那就跟着尾巴跑
-        if (find.length === 0) {
-            return getAstarPath(snake[0], drop)
+        if (find.length <= 2) {
+            flow_tail = true
+            return getAstarPath(snake[0], drop, true)
         }
         var find2 = genNextPaths(find)
         // 走了下一步后 无法连接尾巴 放弃
-        if (find2.length === 0) {
-            console.log(' 提前判断了');
-            return getAstarPath(snake[0], drop)
+        if (find2.length <= 2) {
+//            console.log(' 提前判断了');
+            flow_tail = true
+            return getAstarPath(snake[0], drop, true)
         } else {
+            flow_tail = false
             return find
         }
     }
 
-    function getAstarPath(start, end) {
-        return AStar(initGrid(snake), [start.x, start.y], [end.x, end.y], "Manhattan")
+    function getAstarPath(start, end, tail) {
+        var path = AStar(initGrid(snake), [start.x, start.y], [end.x, end.y], "Manhattan")
+//        if (tail && path.length <= 1) {
+//            console.log('脸都要碰到屁股啦', path);
+//            if(path.length === 0){
+//                path.push([])
+//            }
+//            path.push([end.x, end.y])
+//        }
+        return path
     }
 
     // 试着走一步 看能否连接尾巴
