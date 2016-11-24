@@ -1,0 +1,63 @@
+extends layout_crud
+block scripts
+  include crud_script.jade
+
+block content
+  .container(ng-controller="HEHEController")
+    .row
+      #content.col-lg-12
+        include ./title
+        .row
+          .col-md-12
+            .form-horizontal
+              each property in propertys
+                if  property.array
+                  .form-group
+                    label.col-md-2.control-label=property.name + ': '
+                    i.fa.fa-plus.fontS18.marginL20(ng-show="isUpdate" ng-click="addArrayKey($event, '#{property.key}')", title="添加")
+                    a(href="javascript:;", ng-show="isUpdate" ng-click="addArrayKey($event, '#{property.key}')")='添加'+property.name
+
+                  .form-group(ng-repeat="(inkey, arr_object) in model.#{property.key}" )
+                    label.col-md-2.control-label=""
+                    .col-md-10
+                      each t_property in property.tem_propertys
+                        include crud_s_input.jade
+                      i.fa.fa-trash-o.fontS18.marginL20(ng-click="removeArrayKey($event,model,'#{property.key}', inkey)", title="删除")
+
+                else
+                  .form-group
+                    include crud_s_input.jade
+
+              .form-group
+                .col-sm-offset-2.col-md-1
+                  a.btn.btn-default(href="javascript:;", ng-click="updateModel($event,model,k)") 保存
+                .col-sm-offset-2.col-md-1
+                  a.btn.btn-default(href="javascript:;", ng-click="cancelUpdateModel($event,model,k)") 取消
+
+
+            table.table.table-paper.table-hover.table-bordered.table-striped
+              thead
+                tr
+                  each property in propertys
+                    th
+                      label=property.name
+                  th.w120 操作
+              tbody
+                tr(ng-repeat="(k,model) in models")
+                  each property in propertys
+                    if  property.array
+                      td
+                        table.table.table-paper.table-hover.table-bordered.table-striped
+                          tr(ng-repeat="(inkey, arr_object) in model.#{property.key}")
+                            each t_property in property.tem_propertys
+                              td
+                                if t_property.name
+                                  label='  ' + t_property.name+':'
+                                include ./crud_td.jade
+                    else
+                      td
+                        include ./crud_td.jade
+                  td
+                    i.fa.fa-pencil.fontS18.marginR20(ng-click="editModel($event,model,k)", title="编辑" ng-show="!model.isUpdate")
+                    i.fa.fa-trash-o.fontS18.marginR20(ng-click="deleteModel($event,model,k)", title="删除" ng-show="!model.isUpdate")
+                    i.fa.fa-undo.fontS18.marginR15(ng-click="cancelUpdateModel($event,model,k)", title="取消" ng-show="model.isUpdate")
