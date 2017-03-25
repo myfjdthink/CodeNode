@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数独</title>
+
+</head>
+<body>
+<canvas id="myCanvas" width="500" height="700">
+    您的浏览器不支持canvas，建议使用最新版的Chrome
+</canvas>
+<script>
+  var logTemp = console.log
+  var debug = true
+  console.log = function () {
+    if (debug) {
+      logTemp.apply(console, arguments)
+    }
+  }
+  function Utils () {}
+  Utils.prototype = {
+    unique: function unique (arr) {
+      return arr.filter(function onlyUnique (value, index, self) {
+        return self.indexOf(value) === index;
+      })
+    },
+    range: function range (start, end, step = 1) {
+      return new Array(end - start).fill(0).map(function (value, index) {
+        return start + (index * step)
+      })
+    },
+    diff: function diff (arrA, arrB) {
+      return arrA.filter(function (o) {
+        return arrB.indexOf(o) < 0
+      });
+    }
+  }
+  function Sudoku (ctx, util, config) {
+    this.ctx = ctx
+    this.nums = []
+    var length = 480
+    var total = 9
+    this.point = null
+    this.config = {
+      total: total,
+      rectangleSize: 3,
+      length: length,
+      step: length / total,
+      debugPoint: {
+        x: 6,
+        y: 1
+      }
+    }
+    this.util = util
+  }
+  Sudoku.prototype = {
+    init: function init () {
+      this.initNums()
+      this.drawAll()
+      this.drawKeyboard()
+      this.addListener()
+    },
+    initNums: function __initNums () {
+      var nums = [
+        [0, 7, 3, 0, 0, 0, 2, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 9],
+        [1, 0, 0, 0, 5, 2, 0, 0, 7],
+
+        [0, 0, 0, 0, 0, 7, 0, 0, 4],
+        [0, 6, 0, 2, 1, 0, 7, 3, 8],
+        [0, 0, 0, 9, 0, 0, 0, 0, 0],
+
+        [0, 0, 0, 0, 0, 0, 6, 0, 0],
+        [2, 4, 0, 6, 0, 8, 0, 1, 0],
+        [3, 5, 6, 0, 0, 0, 0, 7, 0],
+      ]
+      this.nums = nums.map(function (lines) {
+        return lines.map(function (num) {
+          return {
+            fillStyle: "black",      // 文字颜色
+            bgColor: "",      // 背景颜色
+            num: num,      // 题目上的数字
+            userNum: '',  // 用户填的数字的数字
+            vars: [],       // 方格内还可以填的数字
+            get number () {
+              return this.num || this.userNum
+            }
+          }
+        })
+      })
+    },
+    // 渲染除键盘外的整个页面
+    drawAll: function () {
+      // clear
+      var length = this.config.length
+      this.ctx.clearRect(0, 0, length, length)
+      this.drawLines()
+      this.findVariable()
+      this.drawPoints()
+    },
+    drawLines: function drawLines () {
+      var step = this.config.step
+      var total = this.config.total
+      var length = this.config.length
+      var ctx = this.ctx
+
+      for (var i = 0; i < total + 1; i++) {
+        var start_x = 0
+        var start_y = i * step
+        var end_x = length
+        var end_y = i * step
+        line(start_x, start_y, end_x, end_y, i)
+      }
+      for (var i = 0; i < total + 1; i++) {
+        var start_x = i * step
+        var start_y = 0
+        var end_x = i * step
+        var end_y = length
+        line(start_x, start_y, end_x, end_y, i)
+      }
+      function line (start_x, start_y, end_x, end_y, i) {
+        ctx.beginPath();
+        if (i % 3 === 0) {
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 3;
+        } else {
+          ctx.strokeStyle = "black";
+          ctx.lineWidth = 1;
+        }
+
+        ctx.moveTo(start_x, start_y);
+        ctx.lineTo(end_x, end_y);
+        ctx.stroke();  //描边
+      }
+    },
+    // 渲染每个格子的元素
+    drawPoints: function drawNums () {
+      var total = this.config.total
+      for (var i = 0; i < total; i++) {
+        for (var j = 0; j < total; j++) {
+          this.drawPoint(i, j)
+        }
+      }
+    },
+    // 渲染单个格子的元素
+    drawPoint: function drawNum (i, j) {
+      var step = this.config.step
+      var rectangleSize = this.config.rectangleSize
+      var ctx = this.ctx
+      var object = this.nums[i][j]
+      var x = j * step
+      var y = (i + 1) * step
+      if (object.bgColor) {
+        // 设置填充色
+        ctx.fillStyle = object.bgColor;
+        console.log('fill point ', x, y - step, step, step);
+        ctx.fillRect(x, y - step, step, step);
+      }
+      if (object.number) {
+        if (object.num) {
+          ctx.fillStyle = "gray";
+        }
+        if (object.userNum) {
+          ctx.fillStyle = "black";
+        }
+        ctx.font = (step) + "px serif";
+        ctx.fillText(object.number, x + (step / 4), y - (step / 8))
+      } else {
+        drawVars(object.vars, x, y)
+      }
+      // drawCoordinate(i, j, x, y)
+      // 画剩余的可选值
+      function drawVars (vars, x, y) {
+        if (vars && vars.length > 3) return
+        var smallStep = step / rectangleSize
+        var index = 1
+        for (var i = 0; i < rectangleSize; i++) {
+          for (var j = 0; j < rectangleSize; j++) {
+            var x_inner = x + j * smallStep + (smallStep / 4)
+            var y_inner = y - i * smallStep - (smallStep / 8)
+            // console.log('vars ', vars, index);
+            if (vars.indexOf(index) > -1) {
+              ctx.fillStyle = "gray";
+              ctx.font = (smallStep) + "px serif";
+              ctx.fillText(index, x_inner, y_inner);
+            }
+            index++
+          }
+        }
+      }
+
+      // 画坐标
+      function drawCoordinate (i, j, x, y) {
+        ctx.fillStyle = "red";
+        ctx.font = (step / 6) + "px serif";
+        ctx.fillText(i + ', ' + j, x + (step / 4 * 3), y);
+      }
+    },
+    drawKeyboard: function drawNum () {
+      var length = this.config.length
+      var step = this.config.step
+      var kb_length = this.config.length / 3
+      var offset_y = length + step
+      var offset_x = kb_length - step
+      var ctx = this.ctx
+      drawLines()
+      drawNumber()
+      function drawLines () {
+        for (var i = 0; i < 3 + 1; i++) {
+          var start_x = 0
+          var start_y = i * step
+          var end_x = step * 5
+          var end_y = i * step
+          line(start_x + offset_x, start_y + offset_y, end_x + offset_x, end_y + offset_y, i)
+        }
+        for (var i = 0; i < 5 + 1; i++) {
+          var start_x = i * step
+          var start_y = 0
+          var end_x = i * step
+          var end_y = step * 3
+          line(start_x + offset_x, start_y + offset_y, end_x + offset_x, end_y + offset_y, i)
+        }
+        function line (start_x, start_y, end_x, end_y, i) {
+          ctx.beginPath();
+          ctx.strokeStyle = "black";
+          ctx.moveTo(start_x, start_y);
+          ctx.lineTo(end_x, end_y);
+          ctx.stroke();  //描边
+        }
+      }
+
+      function drawNumber () {
+        var index = 1
+        for (var i = 0; i < 3; i++) {
+          for (var j = 0; j < 3; j++) {
+            var x_inner = offset_x + step + j * step + (step / 4)
+            var y_inner = offset_y + kb_length - i * step - (step / 8)
+            ctx.fillStyle = "#ff8c43";
+            ctx.font = (step) + "px serif";
+            ctx.fillText(index++, x_inner, y_inner);
+          }
+        }
+      }
+
+      ctx.fillText('C', offset_x + 4 * step + 10, offset_y + 2 * step - 8);
+    },
+    // 找到每个方格可以填充的数据
+    findVariable: function findVariable () {
+      var _this = this
+      var total = this.config.total
+      var rectangleSize = _this.config.rectangleSize
+      var debugPoint = _this.config.debugPoint
+      for (var i = 0; i < total; i++) {
+        for (var j = 0; j < total; j++) {
+          var residues = findResidue(this.nums, i, j)
+          this.nums[i][j].vars = residues
+          // if (!nums[i][j].number) console.log('vars ', nums[i][j].vars);
+        }
+      }
+      // 找到剩余值
+      function findResidue (nums, x, y) {
+        var rectangleNums = getRectangle(nums, x, y)
+        var vNums = getVerticalLines(nums, x, y)
+        var hNums = getHorizontalLines(nums, x, y)
+        var result = rectangleNums.concat(vNums).concat(hNums)
+        // console.log('residues ', result);
+        result = _this.util.unique(result)
+        var allNums = _this.util.range(1, 10)
+        var result = _this.util.diff(allNums, result)
+        if (x === debugPoint.x && y === debugPoint.y) {
+          console.log('rectangleNums ', y, x, rectangleNums);
+          console.log('vNums ', y, x, vNums);
+          console.log('hNums ', y, x, hNums);
+          console.log('result ', y, x, result);
+        }
+        return result
+        // 所在方块的数字
+        function getRectangle (nums, x, y) {
+          var x_base = Math.floor(x / rectangleSize)
+          var y_base = Math.floor(y / rectangleSize)
+          var result = []
+          for (var i = 0; i < rectangleSize; i++) {
+            for (var j = 0; j < rectangleSize; j++) {
+              var num = nums[i + x_base * rectangleSize][j + y_base * rectangleSize].number
+              if (num) result.push(num)
+            }
+          }
+          return result
+        }
+
+        // 所在竖线
+        function getVerticalLines (nums, x, y) {
+          var result = []
+          for (var i = 0; i < total; i++) {
+            var num = nums[x][i].number
+            if (num) result.push(num)
+          }
+          return result
+        }
+
+        // 所在横线
+        function getHorizontalLines (nums, x, y) {
+          var result = []
+          for (var i = 0; i < total; i++) {
+            var num = nums[i][y].number
+            if (num) result.push(num)
+          }
+          return result
+        }
+      }
+    },
+    clickPoint: function clickPoint (real_x, real_y) {
+      this.point = {x: real_y, y: real_x}
+      const point = this.nums[real_y][real_x]
+      var color = "#2b9bff";
+      this.nums.forEach(function (line) {
+        line.forEach(function (object) {
+          if (point.number && point.number === object.number) {
+            object.bgColor = color;
+          } else {
+            object.bgColor = null
+          }
+        })
+      })
+      point.bgColor = color;
+      this.drawAll()
+    },
+    clickKeyboard: function clickPoint (x, y) {
+      var keys = {
+        '116': 0,
+        '123': 1,
+        '124': 2,
+        '125': 3,
+        '113': 4,
+        '114': 5,
+        '115': 6,
+        '103': 7,
+        '104': 8,
+        '105': 9
+      }
+      var key = y + '' + x
+      if (keys[key] == null) return
+      if (this.point) {
+        var userNum = keys[key]
+        console.log('input %s to %s %s', userNum, this.point.x, this.point.y);
+        this.nums[this.point.x][this.point.y].userNum = userNum
+      }
+      this.drawAll()
+    },
+    addListener: function addListener () {
+      var _this = this;
+      var device = (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase()));
+      var clickEvtName = device ? 'touchstart' : 'mousedown';
+      document.addEventListener(clickEvtName, function (e) {
+        var docEle = document.documentElement;
+        if (!_this.clientRect) {
+          _this.clientRect = {
+            left: 0,
+            top: 0
+          };
+        }
+        var x = (device ? e.touches[0].clientX : e.clientX) - _this.clientRect.left + docEle.scrollLeft - docEle.clientLeft;
+        var y = (device ? e.touches[0].clientY : e.clientY) - _this.clientRect.top + docEle.scrollTop - docEle.clientTop;
+        var step = _this.config.step
+        var total = _this.config.total
+        var real_x = Math.floor(x / step)
+        var real_y = Math.floor(y / step)
+        console.log('click point ', real_y, real_x);
+        if (real_x < total && real_y < total) {
+          _this.clickPoint(real_x, real_y);
+        } else {
+          _this.clickKeyboard(real_x, real_y)
+        }
+      }, false);
+    }
+  }
+  var ctx2 = document.getElementById("myCanvas").getContext("2d");
+  window.onload = function () {
+    var sudoku = new Sudoku(ctx2, new Utils(), {});
+    sudoku.init();
+  }
+
+
+</script>
+</body>
+</html>
